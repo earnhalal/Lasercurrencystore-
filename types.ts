@@ -31,6 +31,7 @@ export interface Order {
   status: OrderStatus;
   city: string;
   deliveryCompany: string;
+  busTerminal?: string;
   fullName: string;
   phoneNumber: string;
   address: string;

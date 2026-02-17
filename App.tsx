@@ -17,10 +17,16 @@ const App: React.FC = () => {
             <CartProvider>
                 <HashRouter>
                     <div 
-                        className="min-h-screen flex flex-col bg-gray-900 text-white"
+                        className="min-h-screen flex flex-col bg-white text-slate-900"
                         style={{ fontFamily: "'Exo 2', sans-serif" }}
                     >
-                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-black via-gray-900 to-purple-900/20 z-0"></div>
+                         {/* High-end decorative background */}
+                         <div className="fixed inset-0 pointer-events-none z-0">
+                            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-50/50 rounded-full blur-[120px] -mr-40 -mt-40 opacity-60"></div>
+                            <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-amber-50/50 rounded-full blur-[120px] -ml-40 -mb-40 opacity-40"></div>
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-light.png')] opacity-[0.03]"></div>
+                         </div>
+                         
                          <div className="relative z-10 flex flex-col flex-grow">
                             <Header />
                             <main className="flex-grow">
