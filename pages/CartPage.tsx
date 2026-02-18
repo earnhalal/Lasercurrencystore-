@@ -5,41 +5,38 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DELIVERY_COMPANIES } from '../constants';
 import type { Order } from '../types';
 
-const OrderProcessingModal: React.FC<{isProcessing: boolean; isSuccess: boolean; onComplete: () => void}> = ({isProcessing, isSuccess, onComplete}) => (
-    <div className="fixed inset-0 bg-blue-950/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center border-b-8 border-amber-500 relative overflow-hidden">
-            {isProcessing ? (
-                <div className="py-12">
-                    <div className="relative w-24 h-24 mx-auto mb-10">
-                        <div className="absolute inset-0 border-4 border-blue-50 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-t-blue-900 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-900 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04kM12 21.48l.342-1.333c1.246-.835 2.16-2.212 2.16-3.747a3.5 3.5 0 10-7 0c0 1.535.914 2.912 2.16 3.747L12 21.48z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <h3 className="text-2xl font-black text-blue-900 uppercase tracking-tighter mb-4">Verifying Transaction</h3>
-                    <p className="text-slate-500 font-medium leading-relaxed">Securing manifest details and auditing settlement proof...</p>
-                </div>
-            ) : isSuccess ? (
-                <div className="py-8">
-                    <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4">Manifest Confirmed</h3>
-                    <p className="text-slate-500 font-medium mb-10">Your requisition has been successfully logged in the vault. Tracking will update shortly.</p>
-                    <button onClick={onComplete} className="w-full bg-blue-900 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest shadow-xl shadow-blue-900/20">
-                        View Order Status
-                    </button>
-                </div>
-            ) : null}
-        </div>
-    </div>
-);
+const OrderLoadingOverlay: React.FC<{isProcessing: boolean; isSuccess: boolean; onComplete: () => void}> = ({isProcessing, isSuccess, onComplete}) => {
+    if (!isProcessing && !isSuccess) return null;
 
+    return (
+        <div className="fixed inset-0 bg-blue-900/90 backdrop-blur-md flex items-center justify-center z-[100] p-6 text-center">
+            <div className="bg-white rounded-[3rem] p-12 max-w-sm w-full shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-amber-500"></div>
+                {isProcessing ? (
+                    <>
+                        <div className="relative w-24 h-24 mx-auto mb-8">
+                            <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-t-blue-900 rounded-full animate-spin"></div>
+                        </div>
+                        <h3 className="text-2xl font-black text-blue-900 mb-2 uppercase tracking-tight">Creating Order</h3>
+                        <p className="text-slate-500 font-medium">Securing your celebration bundles. Please do not close this window...</p>
+                    </>
+                ) : (
+                    <>
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Confirmed!</h3>
+                        <p className="text-slate-500 mb-10 font-medium">We have received your celebration order. Our team will contact you shortly for dispatch.</p>
+                        <button onClick={onComplete} className="w-full bg-blue-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs shadow-xl shadow-blue-900/20 active:scale-95 transition">
+                            Go to My Account
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export const CartPage: React.FC = () => {
     const { cart, removeFromCart, totalAmount, clearCart } = useCart();
@@ -47,28 +44,20 @@ export const CartPage: React.FC = () => {
     const navigate = useNavigate();
     
     // Form States
-    const [city, setCity] = useState('');
-    const [deliveryCompany, setDeliveryCompany] = useState(DELIVERY_COMPANIES[0]);
-    const [busTerminal, setBusTerminal] = useState('');
     const [fullName, setFullName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const [phone, setPhone] = useState('');
+    const [city, setCity] = useState('');
     const [address, setAddress] = useState('');
-    
+    const [delivery, setDelivery] = useState(DELIVERY_COMPANIES[0]);
+    const [busTerminal, setBusTerminal] = useState('');
+
     // UI States
     const [isConfirming, setIsConfirming] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const advanceAmount = totalAmount / 2;
-    
-    // Validation
-    const isBus = deliveryCompany === 'Local Transport Bus';
-    const isFormValid = 
-        fullName.trim() !== '' && 
-        phoneNumber.trim() !== '' && 
-        address.trim() !== '' && 
-        city.trim() !== '' &&
-        (!isBus || busTerminal.trim() !== '');
+    const isBus = delivery === 'Local Transport Bus';
+    const isFormValid = fullName && phone && city && address && (!isBus || busTerminal);
 
     const handlePlaceOrder = () => {
         if (!user || user.status !== 'verified') {
@@ -78,25 +67,24 @@ export const CartPage: React.FC = () => {
         setIsConfirming(true);
     };
 
-    const handleFinalConfirm = () => {
-        setIsProcessing(true);
+    const finalOrderSubmit = () => {
         setIsConfirming(false);
+        setIsProcessing(true);
         
-        // Simulate premium processing delay
         setTimeout(() => {
             const newOrder: Order = {
-                id: `ORD-LC-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-                items: cart,
+                id: `ORD-WED-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+                items: [...cart],
                 totalAmount,
-                advancePaid: advanceAmount,
+                advancePaid: totalAmount / 2,
                 date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
                 status: 'Processing',
                 city,
-                deliveryCompany,
+                deliveryCompany: delivery,
                 busTerminal: isBus ? busTerminal : undefined,
                 fullName,
-                phoneNumber,
-                address,
+                phoneNumber: phone,
+                address
             };
             addOrder(newOrder);
             clearCart();
@@ -107,196 +95,152 @@ export const CartPage: React.FC = () => {
 
     if (cart.length === 0 && !isSuccess) {
         return (
-            <div className="container mx-auto px-4 py-32 text-center">
-                <div className="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-10 text-slate-200">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+            <div className="container mx-auto px-4 py-32 text-center max-w-lg">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                 </div>
-                <h2 className="text-4xl font-black text-slate-900 mb-4 uppercase tracking-tighter">Manifest Empty</h2>
-                <p className="text-slate-400 font-medium mb-12 max-w-sm mx-auto">No items selected for dispatch. Return to the archive to secure your lot.</p>
-                <Link to="/" className="inline-block bg-blue-900 hover:bg-blue-800 text-white font-black py-4 px-10 rounded-xl transition-all shadow-2xl shadow-blue-900/20 uppercase tracking-[0.2em] text-xs">
-                    Browse Inventory
-                </Link>
+                <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Your cart is empty</h2>
+                <p className="text-slate-500 mb-10">You haven't selected any bundles for your wedding yet. Browse our inventory to find the perfect celebration packs.</p>
+                <Link to="/" className="inline-block bg-blue-900 text-white font-black py-4 px-10 rounded-xl transition shadow-xl shadow-blue-900/20 uppercase tracking-widest text-xs">Shop Bundles</Link>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-             {/* Progress Overlays */}
-             {(isProcessing || isSuccess) && <OrderProcessingModal isProcessing={isProcessing} isSuccess={isSuccess} onComplete={() => navigate('/dashboard')} />}
-             
-             {isConfirming && (
-                <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-                    <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full border-t-8 border-amber-500">
-                        <h2 className="text-3xl font-black text-blue-900 mb-6 uppercase tracking-tighter">Financial Settlement</h2>
-                        <div className="space-y-6 mb-10">
-                            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Required Advance (50%)</span>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-black text-blue-900 tracking-tighter">{advanceAmount.toLocaleString()}</span>
-                                    <span className="text-xs font-black text-amber-500 uppercase">PKR</span>
-                                </div>
-                            </div>
-                            <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-2">Easypaisa Settlement ID</span>
-                                <p className="text-slate-900 font-mono font-bold text-lg break-all">PK76TMFB0000000040888058</p>
-                            </div>
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+            <OrderLoadingOverlay isProcessing={isProcessing} isSuccess={isSuccess} onComplete={() => navigate('/dashboard')} />
+
+            {isConfirming && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-6">
+                    <div className="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl border-t-8 border-amber-500">
+                        <h3 className="text-2xl font-black text-blue-900 mb-4 uppercase tracking-tight">Advance Required</h3>
+                        <p className="text-slate-600 mb-8 font-medium">To confirm your order, please pay <span className="text-slate-900 font-bold underline">{(totalAmount / 2).toLocaleString()} PKR</span> (50% Advance) to the following account:</p>
+                        
+                        <div className="bg-blue-50 p-6 rounded-2xl mb-10 border border-blue-100">
+                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest block mb-2">Easypaisa Details</span>
+                            <p className="text-xl font-black text-blue-900 tracking-wider">03xx-xxxxxxx</p>
+                            <p className="text-sm font-bold text-slate-600 mt-1">Title: LASER STORE OFFICIAL</p>
                         </div>
+                        
                         <div className="flex gap-4">
-                            <button onClick={() => setIsConfirming(false)} className="flex-1 bg-slate-100 text-slate-500 font-black py-4 rounded-xl uppercase text-xs tracking-widest">
-                                Cancel
-                            </button>
-                            <button onClick={handleFinalConfirm} className="flex-2 bg-blue-900 text-white font-black py-4 px-8 rounded-xl uppercase text-xs tracking-widest shadow-xl shadow-blue-900/20">
-                                I Have Paid
-                            </button>
+                            <button onClick={() => setIsConfirming(false)} className="flex-1 py-4 text-slate-400 font-bold uppercase text-xs tracking-widest">Cancel</button>
+                            <button onClick={finalOrderSubmit} className="flex-1 bg-blue-900 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg shadow-blue-900/20">I Have Paid</button>
                         </div>
                     </div>
                 </div>
-             )}
+            )}
 
-            <div className="mb-16">
-                 <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter">Secure Checkout</h2>
-                 <p className="text-slate-500 font-medium mt-2">Logistics Manifest & Final Settlement Proof</p>
+            <div className="mb-12">
+                <h1 className="text-4xl font-black text-blue-900 uppercase tracking-tight">Finalize My Order</h1>
+                <p className="text-slate-500 mt-2">Provide your delivery details below to secure your bundles.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-
-                {/* Left Column: Requisition List & Logistics */}
-                <div className="lg:col-span-8 space-y-12">
-                    {/* Items List */}
-                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                        <div className="bg-slate-50 px-8 py-5 border-b border-slate-200">
-                             <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Inventory Selected</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                {/* Form Side */}
+                <div className="lg:col-span-7 space-y-10">
+                    <section className="bg-white p-8 md:p-10 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <h3 className="text-xl font-bold text-blue-900 mb-8 border-b border-slate-50 pb-4 uppercase tracking-tight">1. Delivery Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recipient Full Name</label>
+                                <input type="text" placeholder="Groom / Family Name..." value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-900 outline-none" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contact Number</label>
+                                <input type="tel" placeholder="03xx xxxxxxx" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-900 outline-none" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">City</label>
+                                <input type="text" placeholder="Lahore, Karachi..." value={city} onChange={e => setCity(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-900 outline-none" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Shipping Method</label>
+                                <select value={delivery} onChange={e => setDelivery(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-900 outline-none">
+                                    {DELIVERY_COMPANIES.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Complete House Address</label>
+                                <input type="text" placeholder="Street, Area, Landmark..." value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-900 outline-none" />
+                            </div>
+                            
+                            {isBus && (
+                                <div className="md:col-span-2 bg-amber-50 p-6 rounded-2xl border border-amber-100 animate-in fade-in slide-in-from-top-2">
+                                    <label className="text-[10px] font-black text-amber-700 uppercase tracking-widest block mb-2">Transport Terminal Name</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="e.g. Daewoo Terminal (Kalma Chowk), Faisal Movers Terminal" 
+                                        value={busTerminal} 
+                                        onChange={e => setBusTerminal(e.target.value)} 
+                                        className="w-full bg-white border border-amber-200 rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-amber-500 outline-none" 
+                                    />
+                                    <p className="text-[10px] text-amber-600 font-bold mt-2 italic uppercase">* Bus delivery is faster for urgent events.</p>
+                                </div>
+                            )}
                         </div>
-                        <div className="divide-y divide-slate-100">
+                    </section>
+
+                    <section className="bg-white p-8 md:p-10 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <h3 className="text-xl font-bold text-blue-900 mb-6 border-b border-slate-50 pb-4 uppercase tracking-tight">2. Selected Bundles</h3>
+                        <div className="divide-y divide-slate-50">
                             {cart.map(item => (
-                                <div key={item.id} className="p-8 flex flex-col sm:flex-row sm:items-center justify-between group transition-colors">
-                                    <div className="flex items-start gap-8 mb-6 sm:mb-0">
-                                        <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 text-blue-900 font-mono text-xs font-black shadow-inner">
-                                            #{item.id}
-                                        </div>
-                                        <div>
-                                            <p className="font-black text-slate-900 text-xl uppercase tracking-tighter leading-none mb-2">{item.name}</p>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-widest">Quantity: {item.quantity}</span>
-                                                <span className="text-slate-300">|</span>
-                                                <span className="text-xs font-bold text-slate-400 uppercase">Unit: {item.price.toLocaleString()} PKR</span>
-                                            </div>
+                                <div key={item.id} className="py-6 flex justify-between items-center group">
+                                    <div>
+                                        <p className="font-bold text-slate-900 group-hover:text-blue-900 transition">{item.name}</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-widest">Qty: {item.quantity}</span>
+                                            <span className="text-slate-300 text-xs">|</span>
+                                            <span className="text-xs text-slate-400 font-medium">Unit Price: {item.price} PKR</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-end gap-10">
-                                        <p className="font-black text-blue-900 text-xl tracking-tighter">{(item.price * item.quantity).toLocaleString()} <span className="text-[10px] font-black text-amber-500 ml-0.5">PKR</span></p>
-                                        <button 
-                                            onClick={() => removeFromCart(item.id)} 
-                                            className="text-slate-300 hover:text-red-500 transition-colors p-3 bg-slate-50 hover:bg-red-50 rounded-xl"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
+                                    <div className="text-right">
+                                        <p className="font-black text-blue-900">{(item.price * item.quantity).toLocaleString()} PKR</p>
+                                        <button onClick={() => removeFromCart(item.id)} className="text-[10px] text-red-500 font-bold uppercase hover:underline mt-1">Delete</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
-
-                     {/* Logistics Form */}
-                    <div className="bg-white border border-slate-200 rounded-3xl p-10 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-full pointer-events-none"></div>
-                        
-                        <h3 className="text-2xl font-black text-slate-900 mb-10 uppercase tracking-tighter flex items-center gap-4">
-                            <span className="w-12 h-1.5 bg-blue-900 rounded-full"></span>
-                            Logistics Manifest
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Authorized Recipient Name</label>
-                                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-blue-900/5 focus:border-blue-900 transition-all outline-none font-bold" placeholder="Full Name..." />
-                            </div>
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Encrypted Phone Link</label>
-                                <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-blue-900/5 focus:border-blue-900 transition-all outline-none font-bold" placeholder="03xx xxxxxxx" />
-                            </div>
-                             <div className="md:col-span-2 space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Shipping Address</label>
-                                <input type="text" value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-blue-900/5 focus:border-blue-900 transition-all outline-none font-bold" placeholder="Street, Area, Landmark..." />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target City</label>
-                                <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-blue-900/5 focus:border-blue-900 transition-all outline-none font-bold" placeholder="City..." />
-                            </div>
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Preferred Courier Stream</label>
-                                <select value={deliveryCompany} onChange={e => setDeliveryCompany(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-blue-900/5 focus:border-blue-900 transition-all outline-none font-black appearance-none">
-                                    {DELIVERY_COMPANIES.map(company => <option key={company} value={company}>{company}</option>)}
-                                </select>
-                            </div>
-                            
-                            {/* Terminal Logic */}
-                            {isBus && (
-                                <div className="md:col-span-2 space-y-4 bg-amber-50 p-8 rounded-2xl border border-amber-100 animate-in fade-in slide-in-from-top-4">
-                                    <div>
-                                        <label className="text-[10px] font-black text-amber-700 uppercase tracking-widest block mb-2">Target Bus Terminal / Stop</label>
-                                        <input 
-                                            type="text" 
-                                            value={busTerminal} 
-                                            onChange={e => setBusTerminal(e.target.value)} 
-                                            className="w-full bg-white border border-amber-200 rounded-xl p-4 text-slate-900 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none font-bold" 
-                                            placeholder="e.g. Faisal Movers Terminal, Daewoo Chowk..." 
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest italic">* Terminal pickup is recommended for maximum discretion.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    </section>
                 </div>
 
-                {/* Right Column: Financial Snapshot */}
-                <div className="lg:col-span-4">
-                    <div className="bg-white border border-slate-200 rounded-3xl shadow-[0_40px_80px_rgba(30,58,138,0.06)] p-10 sticky top-28">
-                        <h3 className="text-xl font-black text-blue-900 mb-8 uppercase tracking-tighter border-b border-slate-100 pb-5">Acquisition Summary</h3>
+                {/* Pricing / Action Side */}
+                <div className="lg:col-span-5">
+                    <div className="bg-blue-900 text-white p-10 rounded-[3rem] sticky top-24 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-full pointer-events-none"></div>
                         
-                        <div className="space-y-6 text-sm mb-10">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Total Valuation</span>
-                                <span className="text-slate-900 font-black text-lg tabular-nums">{totalAmount.toLocaleString()} PKR</span>
+                        <h3 className="text-2xl font-black mb-10 border-b border-white/10 pb-6 uppercase tracking-tight">Financial Summary</h3>
+                        
+                        <div className="space-y-6 mb-12">
+                            <div className="flex justify-between items-center text-white/60">
+                                <span className="text-xs font-bold uppercase tracking-widest">Order Total Value</span>
+                                <span className="text-lg font-bold">{totalAmount.toLocaleString()} PKR</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-amber-500 font-black uppercase tracking-widest text-[10px]">Required Deposit (50%)</span>
-                                <span className="text-amber-600 font-black text-lg tabular-nums">{advanceAmount.toLocaleString()} PKR</span>
+                            <div className="flex justify-between items-center text-amber-400">
+                                <span className="text-xs font-black uppercase tracking-[0.2em]">Required Advance (50%)</span>
+                                <span className="text-3xl font-black tracking-tighter">{(totalAmount / 2).toLocaleString()} PKR</span>
                             </div>
-                             <div className="flex justify-between items-center pt-6 border-t border-slate-100">
-                                <span className="font-black text-slate-900 text-sm uppercase tracking-widest">Due On Dispatch</span>
-                                <span className="font-black text-blue-900 text-2xl tracking-tighter tabular-nums">{advanceAmount.toLocaleString()} PKR</span>
+                            <div className="flex justify-between items-center border-t border-white/10 pt-6">
+                                <span className="text-xs font-bold uppercase tracking-widest">Remaining on Delivery</span>
+                                <span className="text-xl font-bold">{(totalAmount / 2).toLocaleString()} PKR</span>
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 p-6 rounded-2xl mb-10">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em] text-center leading-relaxed italic">
-                                Final settlement occurs upon verification of dispatch. Requisitions are processed within 24 business hours.
-                            </p>
-                        </div>
-
-                         <button
+                        <button 
                             onClick={handlePlaceOrder}
                             disabled={!isFormValid}
-                            className="w-full bg-blue-900 hover:bg-blue-800 text-white font-black py-5 rounded-2xl transition-all duration-300 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none uppercase tracking-[0.2em] text-xs shadow-2xl shadow-blue-900/30 active:scale-95"
+                            className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-blue-800 disabled:opacity-50 text-white font-black py-6 rounded-2xl transition shadow-2xl shadow-amber-500/20 uppercase tracking-widest text-xs active:scale-95"
                         >
-                            Confirm Requisition
+                            {isFormValid ? 'Place Order Now' : 'Complete Step 1'}
                         </button>
-                         
-                         {!user || user.status !== 'verified' ? (
-                            <div className="mt-6 flex items-center justify-center gap-3 text-amber-600 bg-amber-50 p-4 rounded-xl border border-amber-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                <span className="text-[10px] font-black uppercase tracking-widest">Identity Not Verified</span>
-                            </div>
-                        ) : !isFormValid ? (
-                             <p className="text-center text-red-500 text-[10px] font-black uppercase mt-4 tracking-widest">Pending Logistics Data</p>
-                        ) : null}
+                        
+                        <div className="mt-8 flex items-center justify-center gap-4 px-6 py-4 bg-white/5 rounded-2xl border border-white/10">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest text-center">
+                                Professional Wedding Support Active
+                            </p>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     );

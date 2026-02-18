@@ -17,14 +17,13 @@ const App: React.FC = () => {
             <CartProvider>
                 <HashRouter>
                     <div 
-                        className="min-h-screen flex flex-col bg-white text-slate-900"
+                        className="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-amber-100 selection:text-amber-900"
                         style={{ fontFamily: "'Exo 2', sans-serif" }}
                     >
-                         {/* High-end decorative background */}
+                         {/* Subtle Background Elements */}
                          <div className="fixed inset-0 pointer-events-none z-0">
-                            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-50/50 rounded-full blur-[120px] -mr-40 -mt-40 opacity-60"></div>
-                            <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-amber-50/50 rounded-full blur-[120px] -ml-40 -mb-40 opacity-40"></div>
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/asfalt-light.png')] opacity-[0.03]"></div>
+                            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-50/30 rounded-full blur-[100px] -mr-40 -mt-40 opacity-50"></div>
+                            <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-amber-50/30 rounded-full blur-[100px] -ml-20 -mb-20 opacity-40"></div>
                          </div>
                          
                          <div className="relative z-10 flex flex-col flex-grow">
