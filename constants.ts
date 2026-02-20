@@ -3,70 +3,70 @@ import type { Product, Review } from './types';
 export const PRODUCTS: Product[] = [
   { 
     id: 1, 
-    name: '10 Rupee Wedding Bundle', 
-    price: 35, 
-    description: 'Perfect for showering the groom! High-quality prints that fly beautifully in the air. 100 notes per pack.', 
+    name: '10 Rupee - Signature Series', 
+    price: 399, 
+    description: 'The definitive choice for "Shadi Showering". These lightweight laser-cut notes are designed for maximum hang-time in the air, creating a majestic green-and-gold rain effect.', 
     imageUrl: '', 
     status: 'available' 
   },
   { 
     id: 2, 
-    name: '20 Rupee Event Pack', 
-    price: 27, 
-    description: 'Clean and crisp 20 PKR bundles. Very popular for Mehndi and Sangeet nights.', 
+    name: '20 Rupee - Festive Pack', 
+    price: 799, 
+    description: 'Crisp, high-density prints for Mehndi ceremonies. These notes feature a special anti-glare coating that looks perfect under cinematic party lighting.', 
     imageUrl: '', 
     status: 'available' 
   },
   { 
     id: 3, 
-    name: '50 Rupee "Vail" Special', 
-    price: 31, 
-    description: 'Special 50 PKR notes for "Vail" at weddings. Thick paper feel and bright colors.', 
+    name: '50 Rupee - Elite Vail Bundle', 
+    price: 1399, 
+    description: 'Premium 50 PKR replicas for traditional "Vail". Crafted on bond-quality paper with a realistic texture and micro-printed detailing.', 
     imageUrl: '', 
     status: 'available' 
   },
   { 
     id: 4, 
-    name: '100 Rupee Luxury Bundle', 
-    price: 15, 
-    description: 'Our premium 100 PKR series. Ideal for close family members and special stage appearances.', 
+    name: '100 Rupee - Luxury VIP Pack', 
+    price: 1499, 
+    description: 'Our most sought-after series for Barat entries. These high-fidelity replicas are indistinguishable from authentic notes in professional 4K videography.', 
     imageUrl: '', 
     status: 'available' 
   },
   { 
     id: 5, 
-    name: '500 Rupee Grand Entry Pack', 
-    price: 11, 
-    description: 'High-value look for grand wedding entries. Great for large ceremonies.', 
+    name: '500 Rupee - Royal Grand Series', 
+    price: 3565, 
+    description: 'Unmatched luxury for grand stage appearances. These high-denomination replicas add a touch of royal grandeur to any celebration.', 
     imageUrl: '', 
     status: 'available' 
   },
   { 
     id: 8, 
-    name: 'Electric Money Gun (Gold)', 
+    name: 'Golden Money Shooter - Pro', 
     price: 4999, 
-    description: 'Automatic money shooter. Shower the stage with cash instantly! Battery operated.', 
+    description: 'High-velocity electric money gun in a shimmering gold finish. Guaranteed to shower the stage with a continuous stream of celebration.', 
     imageUrl: '', 
     status: 'available' 
   },
   {
     id: 9,
-    name: 'Mini Cash Counter', 
-    price: 14999,
-    description: 'Portable counting machine. Quickly manage your bundles at the event desk.',
+    name: 'Automatic Bundle Counter', 
+    price: 14500,
+    description: 'Portable desktop currency counter. Essential for wedding planners to quickly verify bundle counts before the event begins.',
     imageUrl: '',
     status: 'available',
   },
   {
     id: 11,
-    name: 'Gold Wedding Gift Card',
-    price: 1499,
-    description: 'Gold-themed metal card for luxury gift presentations at the wedding.',
+    name: 'Metal "Boss" Presentation Card',
+    price: 2499,
+    description: 'A heavy-weight metal replica card for luxury gift presentations and high-end photography sets.',
     imageUrl: '',
     status: 'available',
   },
-  { id: 6, name: '1000 Rupee Bundle', price: 0, description: 'Currently out of stock. Will be available next week.', imageUrl: '', status: 'stock-end' },
-  { id: 7, name: '5000 Rupee Royal Series', price: 0, description: 'Coming soon for the peak wedding season.', imageUrl: '', status: 'coming-soon' },
+  { id: 6, name: '1000 Rupee Bundle', price: 0, description: 'Sold out for the current wedding season. Restocking expected in early winter.', imageUrl: '', status: 'stock-end' },
+  { id: 7, name: '5000 Rupee Ultimate Series', price: 0, description: 'Limited Edition. Only released for the peak celebration months (December-January).', imageUrl: '', status: 'coming-soon' },
 ];
 
 export const PAKISTANI_CITIES: string[] = [
@@ -78,6 +78,6 @@ export const DELIVERY_COMPANIES: string[] = [
 ];
 
 export const REVIEWS: Review[] = [
-    { productId: 1, author: 'Hassan Ali', rating: 5, text: 'The quality is amazing. Used them for my cousin\'s Barat, everyone thought they were real in photos!' },
-    { productId: 4, author: 'Ayesha Khan', rating: 5, text: 'Very fast delivery via bus service. Highly recommended for wedding season.' },
+    { productId: 1, author: 'Zeeshan Malik', rating: 5, text: 'Used these for my brother wedding in Lahore. The bus delivery was so fast and the quality is top-notch!' },
+    { productId: 4, author: 'Amna Tariq', rating: 5, text: 'The 100 PKR notes look absolutely real in the wedding video. Best investment for the stage entry.' },
 ];

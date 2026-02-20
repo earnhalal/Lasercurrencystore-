@@ -1,31 +1,29 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { PRODUCTS } from '../constants';
 
 const VerificationPending: React.FC = () => (
     <div className="container mx-auto px-4 py-32 text-center max-w-lg">
-        <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-100 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-amber-500"></div>
-            <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full mx-auto mb-10 flex items-center justify-center animate-pulse">
+        <div className="bg-white/5 backdrop-blur-2xl p-12 rounded-[3.5rem] border border-white/10 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+            <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-3xl mx-auto mb-10 flex items-center justify-center animate-pulse border border-amber-500/20">
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tight">Audit In Progress</h2>
-            <p className="text-slate-500 font-medium leading-relaxed mb-8">We are verifying your account deposit. Dashboard access will be granted within 5-15 minutes once verified.</p>
-            <div className="inline-block px-6 py-2 bg-slate-50 rounded-full border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status: <span className="text-blue-900">AWAITING ADMIN</span></p>
+            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Settlement Audit</h2>
+            <p className="text-slate-400 font-medium leading-relaxed mb-10 text-sm">Our regional administrators are currently verifying your remittance proof. Access to the asset management dashboard will be granted post-verification.</p>
+            <div className="inline-flex items-center gap-3 px-6 py-2 bg-slate-900 rounded-full border border-white/5">
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping"></div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status: <span className="text-white">Awaiting Clearing</span></p>
             </div>
         </div>
     </div>
 );
 
-type Tab = 'history' | 'wallet' | 'feedback';
+type Tab = 'manifest' | 'vault' | 'tier';
 
 export const DashboardPage: React.FC = () => {
     const { user, orders } = useAuth();
-    const [activeTab, setActiveTab] = useState<Tab>('history');
-    const [feedback, setFeedback] = useState('');
-    const [sent, setSent] = useState(false);
+    const [activeTab, setActiveTab] = useState<Tab>('manifest');
 
     if (!user) {
         return <Navigate to="/auth" />;
@@ -35,129 +33,126 @@ export const DashboardPage: React.FC = () => {
         return <VerificationPending />;
     }
 
-    const handleFeedback = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (feedback.trim()) {
-            setSent(true);
-            setFeedback('');
-            setTimeout(() => setSent(false), 3000);
-        }
-    };
-
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'history':
+            case 'manifest':
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <div className="animate-in fade-in duration-500 space-y-6">
                         {orders.length > 0 ? (
-                            <div className="space-y-6">
-                                {orders.map(order => (
-                                    <div key={order.id} className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all p-8">
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                            orders.map(order => (
+                                <div key={order.id} className="bg-white/5 border border-white/5 rounded-[2.5rem] overflow-hidden p-10 group relative transition hover:border-amber-500/20">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10">
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-amber-500 font-black text-xs border border-amber-500/20">LC</div>
                                             <div>
-                                                <p className="text-xs font-bold text-blue-900 uppercase tracking-widest mb-1">{order.id}</p>
-                                                <p className="text-slate-400 text-[10px] font-bold uppercase">{order.date}</p>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-xl font-black text-slate-900 tabular-nums">{order.totalAmount.toLocaleString()} PKR</span>
-                                                <span className="px-4 py-1.5 bg-blue-50 text-blue-900 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">{order.status}</span>
+                                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">{order.id}</p>
+                                                <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">{order.date}</p>
                                             </div>
                                         </div>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-50">
-                                            <div>
-                                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Delivery To</h5>
-                                                <p className="font-bold text-slate-900 uppercase text-sm">{order.fullName}</p>
-                                                <p className="text-xs text-slate-500 mt-1">{order.phoneNumber}</p>
-                                                <p className="text-xs text-slate-400 mt-1 truncate">{order.address}, {order.city}</p>
-                                            </div>
-                                            <div>
-                                                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Shipping Via</h5>
-                                                <p className="font-bold text-slate-900 uppercase text-sm">{order.deliveryCompany}</p>
-                                                {order.busTerminal && (
-                                                    <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-100">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest">Terminal: {order.busTerminal}</span>
-                                                    </div>
-                                                )}
+                                        <div className="text-left md:text-right">
+                                            <p className="text-3xl font-black text-white tabular-nums tracking-tighter">{order.totalAmount.toLocaleString()} <span className="text-[10px] text-amber-500">PKR</span></p>
+                                            <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 text-blue-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-500/20">
+                                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></span>
+                                                {order.status}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-10 border-t border-white/5">
+                                        <div>
+                                            <h5 className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Recipient Identity</h5>
+                                            <p className="font-black text-white uppercase text-sm">{order.fullName}</p>
+                                            <p className="text-xs text-slate-400 font-bold mt-1">{order.phoneNumber}</p>
+                                            <p className="text-xs text-slate-500 mt-2 leading-relaxed italic">{order.address}, {order.city}</p>
+                                        </div>
+                                        <div>
+                                            <h5 className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Transit Protocol</h5>
+                                            <p className="font-black text-white uppercase text-sm">{order.deliveryCompany}</p>
+                                            {order.busTerminal && (
+                                                <div className="mt-4 p-4 bg-slate-950 rounded-2xl border border-white/5 flex items-center gap-4">
+                                                    <div className="text-xl">🚌</div>
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-0.5">Assigned Terminal</p>
+                                                        <p className="text-[10px] font-black text-white uppercase tracking-widest">{order.busTerminal}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
                         ) : (
-                            <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-                                <p className="text-slate-300 font-bold uppercase tracking-widest">No wedding orders yet.</p>
-                                <Link to="/" className="text-blue-900 font-bold text-sm mt-4 inline-block hover:underline">Browse Bundles Now</Link>
+                            <div className="text-center py-32 bg-white/5 rounded-[3rem] border-2 border-dashed border-white/5">
+                                <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-xs">No active dispatches found in vault archive</p>
+                                <Link to="/" className="text-amber-500 font-black text-[10px] mt-6 inline-block uppercase tracking-widest hover:underline">Begin Acquisition</Link>
                             </div>
                         )}
                     </div>
                 );
-            case 'wallet':
+            case 'vault':
                 return (
-                    <div className="animate-in fade-in duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-blue-900 p-10 rounded-[2.5rem] text-white shadow-2xl">
-                                <span className="text-[10px] font-bold text-blue-300 uppercase tracking-[0.3em] mb-4 block">Available Balance</span>
-                                <div className="text-5xl font-black tracking-tighter tabular-nums mb-8">{user.balance.toLocaleString()} <span className="text-sm text-amber-400 ml-0.5 uppercase">PKR</span></div>
-                                <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
-                                    <p className="text-[10px] text-blue-100 font-bold uppercase tracking-widest leading-relaxed italic">Cleared balance for your next celebration order.</p>
-                                </div>
+                    <div className="animate-in fade-in duration-500 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-slate-900 p-12 rounded-[3rem] text-white border border-white/5 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
+                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-6 block">Available Liquidity</span>
+                            <div className="text-6xl font-black tracking-tighter tabular-nums mb-10">{user.balance.toLocaleString()} <span className="text-sm text-amber-500 ml-1">PKR</span></div>
+                            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-[9px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
+                                Assets available for application towards future bundle settlements.
                             </div>
-                            <div className="bg-white border border-slate-100 p-10 rounded-[2.5rem] shadow-sm">
-                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Deposit Details</h4>
-                                <div className="space-y-6">
-                                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                         <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Official Easypaisa</p>
-                                         <p className="text-lg font-black text-blue-900">03xx-xxxxxxx</p>
-                                    </div>
-                                    <p className="text-xs text-slate-500 leading-relaxed font-medium">Use this account for all future order advance payments. Please send screenshot to our WhatsApp after payment.</p>
-                                </div>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-12 rounded-[3rem] flex flex-col justify-center text-center">
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-10">Authorized Settlement ID</span>
+                            <div className="p-6 bg-slate-950 rounded-2xl border border-white/5 mb-8">
+                                <p className="text-2xl font-black text-white font-mono tracking-widest">03xx-xxxxxxx</p>
                             </div>
+                            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest italic">Verify "LASER STORE" title before remit</p>
                         </div>
                     </div>
                 );
-            case 'feedback':
+            case 'tier':
                 return (
-                    <div className="animate-in fade-in duration-500 max-w-2xl mx-auto">
-                        {sent ? (
-                            <div className="bg-green-50 text-green-700 p-10 rounded-3xl border border-green-100 text-center animate-in zoom-in duration-300">
-                                <p className="font-black text-2xl uppercase tracking-tight mb-2">Thank You!</p>
-                                <p className="text-sm font-medium">Your feedback helps us make your celebrations better.</p>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleFeedback} className="bg-white border border-slate-100 p-10 rounded-[2.5rem] shadow-sm">
-                                <h4 className="text-xl font-bold text-blue-900 mb-8 uppercase tracking-tight">How was your experience?</h4>
-                                <textarea 
-                                    rows={6} 
-                                    value={feedback}
-                                    onChange={e => setFeedback(e.target.value)}
-                                    placeholder="Tell us about the quality of the notes and delivery..."
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 outline-none focus:ring-2 focus:ring-blue-900 transition mb-8 text-sm font-medium"
-                                ></textarea>
-                                <button type="submit" className="bg-blue-900 text-white font-black py-4 px-12 rounded-xl shadow-xl shadow-blue-900/20 uppercase tracking-widest text-xs active:scale-95 transition">Submit Feedback</button>
-                            </form>
-                        )}
+                     <div className="animate-in fade-in duration-500 bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center">
+                        <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Client Hierarchy</h3>
+                        <p className="text-slate-500 text-xs font-black uppercase tracking-widest mb-16">Engagement-based benefits program</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                { name: 'Bronze Collector', perks: 'Standard Bus Transit', current: true },
+                                { name: 'Silver Member', perks: '5% Multi-Pack Discount', current: false },
+                                { name: 'Gold Wholesaler', perks: 'Priority Post-Pay Assets', current: false }
+                            ].map(tier => (
+                                <div key={tier.name} className={`p-8 rounded-[2rem] border transition-all ${tier.current ? 'bg-amber-500/10 border-amber-500/30' : 'bg-slate-950 border-white/5'}`}>
+                                    <div className="text-3xl mb-6">{tier.current ? '👑' : '🔒'}</div>
+                                    <h4 className="font-black text-white uppercase text-[11px] mb-2">{tier.name}</h4>
+                                    <p className="text-xs text-slate-500 font-bold leading-relaxed">{tier.perks}</p>
+                                    {tier.current && <span className="inline-block mt-8 px-5 py-1.5 bg-amber-500 text-slate-950 text-[8px] font-black rounded-full uppercase tracking-widest">Active Level</span>}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 );
         }
     };
 
     return (
-        <div className="container mx-auto px-4 py-16 max-w-6xl">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
-                <div>
-                    <h1 className="text-4xl font-black text-blue-900 uppercase tracking-tight">Welcome, {user.name}</h1>
-                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Personal Celebration Dashboard</p>
+        <div className="container mx-auto px-4 py-20 max-w-7xl">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-10">
+                <div className="flex items-center gap-8">
+                    <div className="w-20 h-20 bg-gradient-to-tr from-blue-700 to-slate-900 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-2xl border border-white/10">
+                        {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Client Vault: {user.name.split(' ')[0]}</h1>
+                        <p className="text-slate-500 font-black uppercase text-[9px] tracking-[0.4em] mt-3">Verified Institutional Member</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4 overflow-x-auto pb-2 w-full md:w-auto">
-                    {(['history', 'wallet', 'feedback'] as Tab[]).map(t => (
+                <div className="flex items-center gap-3 bg-slate-950 p-2 rounded-2xl border border-white/5">
+                    {(['manifest', 'vault', 'tier'] as Tab[]).map(t => (
                         <button 
                             key={t}
                             onClick={() => setActiveTab(t)}
-                            className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition whitespace-nowrap border ${activeTab === t ? 'bg-blue-900 text-white border-blue-900 shadow-xl' : 'bg-white text-slate-500 border-slate-200'}`}
+                            className={`px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === t ? 'bg-amber-500 text-slate-950 shadow-xl' : 'text-slate-500 hover:text-white'}`}
                         >
-                            {t}
+                            {t === 'manifest' ? 'Activity' : t === 'vault' ? 'Settlement' : 'Loyalty'}
                         </button>
                     ))}
                 </div>
