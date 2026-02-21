@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import type { CartItem, Product } from '../types';
 
 interface CartContextType {
@@ -14,12 +14,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [totalAmount, setTotalAmount] = useState(0);
 
-    useEffect(() => {
-        const newTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        setTotalAmount(newTotal);
-    }, [cart]);
+    const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     const addToCart = (product: Product, quantity: number) => {
         setCart(prevCart => {

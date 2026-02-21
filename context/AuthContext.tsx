@@ -1,155 +1,158 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { 
+    onAuthStateChanged, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut 
+} from 'firebase/auth';
+import { 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
+    collection, 
+    query, 
+    where, 
+    onSnapshot,
+    addDoc,
+    serverTimestamp
+} from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import type { User, Order } from '../types';
 
 interface AuthContextType {
     user: User | null;
     orders: Order[];
     signup: (name: string, email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<void>;
     submitPaymentProof: (email: string) => Promise<void>;
     logout: () => void;
     addOrder: (order: Order) => void;
-    resetSignup: (email: string) => void;
+    resetSignup: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// --- Mock User Database in localStorage ---
-const getUsers = (): Record<string, User> => JSON.parse(localStorage.getItem('users') || '{}');
-const getOrders = (): Record<string, Order[]> => JSON.parse(localStorage.getItem('orders') || '{}');
-
-const saveUser = (user: User) => {
-    const users = getUsers();
-    users[user.email] = { ...users[user.email], ...user };
-    localStorage.setItem('users', JSON.stringify(users));
-};
-
-const saveOrders = (email: string, orders: Order[]) => {
-    const allOrders = getOrders();
-    allOrders[email] = orders;
-    localStorage.setItem('orders', JSON.stringify(allOrders));
-};
-// --- End Mock Database ---
-
-
-// --- Device ID Management ---
-const getDeviceID = (): string => {
-    let deviceId = localStorage.getItem('appDeviceId');
-    if (!deviceId) {
-        deviceId = self.crypto.randomUUID();
-        localStorage.setItem('appDeviceId', deviceId);
-    }
-    return deviceId;
-};
-
-const getSignedUpDevices = (): Record<string, string> => JSON.parse(localStorage.getItem('signedUpDevices') || '{}');
-
-const saveSignedUpDevice = (deviceId: string, email: string) => {
-    const devices = getSignedUpDevices();
-    devices[deviceId] = email;
-    localStorage.setItem('signedUpDevices', JSON.stringify(devices));
-};
-// --- End Device ID Management ---
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(() => {
-        const loggedInUserEmail = localStorage.getItem('loggedInUser');
-        if (loggedInUserEmail) {
-            const users = getUsers();
-            return users[loggedInUserEmail] || null;
-        }
-        return null;
-    });
+    const [user, setUser] = useState<User | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                const userDoc = await getDoc(doc(db, 'users', firebaseUser.email!));
+                if (userDoc.exists()) {
+                    setUser(userDoc.data() as User);
+                } else {
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (user) {
-            setOrders(getOrders()[user.email] || []);
-        } else {
-            setOrders([]);
+            const q = query(collection(db, 'orders'), where('userEmail', '==', user.email));
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const ordersData: Order[] = [];
+                querySnapshot.forEach((doc) => {
+                    ordersData.push({ id: doc.id, ...doc.data() } as unknown as Order);
+                });
+                setOrders(ordersData);
+            });
+            return () => unsubscribe();
         }
     }, [user]);
 
-    // Simulate admin verification for accounts that submitted payment proof
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (user && user.status === 'pendingAdminVerification') {
-                 const updatedUser = { ...user, status: 'verified' as const, balance: 20 };
-                 setUser(updatedUser);
-                 saveUser(updatedUser);
-                 // In a real app, this logic would be on a backend and triggered by an admin.
-            }
-        }, 5000); // Check every 5 seconds
-        return () => clearInterval(interval);
+        if (user && user.status === 'pendingAdminVerification') {
+            const timeout = setTimeout(async () => {
+                const userRef = doc(db, 'users', user.email);
+                await updateDoc(userRef, {
+                    status: 'verified',
+                    balance: 20
+                });
+                setUser(prev => prev ? { ...prev, status: 'verified', balance: 20 } : null);
+            }, 5000);
+            return () => clearTimeout(timeout);
+        }
     }, [user]);
     
     const signup = async (name: string, email: string, password: string): Promise<void> => {
-        const users = getUsers();
-        if (users[email]) {
-            // Allow re-trying if signup was incomplete
-            if (users[email].status !== 'verified') {
-                 console.log("Allowing user to re-attempt signup process.");
-            } else {
-                throw new Error("An account with this email already exists.");
-            }
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+
+            const newUser: User = { 
+                name, 
+                email, 
+                password, 
+                status: 'pendingPayment', 
+                balance: 0 
+            };
+
+            await setDoc(doc(db, 'users', email), newUser);
+            setUser(newUser);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Signup failed.";
+            throw new Error(message);
         }
-        
-        // One device, one account rule
-        const deviceId = getDeviceID();
-        const signedUpDevices = getSignedUpDevices();
-        if (Object.keys(signedUpDevices).includes(deviceId) && signedUpDevices[deviceId] !== email) {
-            throw new Error("This device is already associated with another account.");
+    };
+
+    const login = async (email: string, password: string): Promise<void> => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Login failed.";
+            throw new Error(message);
         }
-
-
-        // Directly set status to pendingPayment, no OTP
-        const newUser: User = { name, email, password, status: 'pendingPayment', balance: 0 };
-        saveUser(newUser);
-
-        saveSignedUpDevice(deviceId, newUser.email);
-        
-        // Set user in state to trigger UI update and "log in" the user
-        setUser(newUser);
-        localStorage.setItem('loggedInUser', email);
     };
 
     const submitPaymentProof = async (email: string): Promise<void> => {
-        const userToUpdate = getUsers()[email];
-        if(userToUpdate) {
-            const updatedUser = { ...userToUpdate, status: 'pendingAdminVerification' as const };
-            saveUser(updatedUser);
-            setUser(updatedUser); // Update context
+        try {
+            const userRef = doc(db, 'users', email);
+            await updateDoc(userRef, {
+                status: 'pendingAdminVerification'
+            });
+            setUser(prev => prev ? { ...prev, status: 'pendingAdminVerification' } : null);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to submit proof.";
+            throw new Error(message);
         }
     };
     
-    const resetSignup = (email: string) => {
-        if(!email) return;
-        const users = getUsers();
-        // Only remove user if they haven't been verified
-        if (users[email] && users[email].status !== 'verified') {
-            delete users[email];
-            localStorage.setItem('users', JSON.stringify(users));
-        }
-        if(user && user.email === email) {
-            logout();
-        }
+    const resetSignup = async () => {
+        logout();
     };
 
-    const logout = () => {
+    const logout = async () => {
+        await signOut(auth);
         setUser(null);
-        localStorage.removeItem('loggedInUser');
+        setOrders([]);
     };
 
-    const addOrder = (order: Order) => {
+    const addOrder = async (order: Order) => {
         if (user) {
-            const newOrders = [...orders, order];
-            setOrders(newOrders);
-            saveOrders(user.email, newOrders);
+            try {
+                await addDoc(collection(db, 'orders'), {
+                    ...order,
+                    userEmail: user.email,
+                    createdAt: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Error adding order: ", error);
+            }
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, orders, signup, submitPaymentProof, logout, addOrder, resetSignup }}>
-            {children}
+        <AuthContext.Provider value={{ user, orders, signup, login, submitPaymentProof, logout, addOrder, resetSignup }}>
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

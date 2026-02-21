@@ -65,6 +65,27 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col">
             {/* Hero Section */}
             <section className="py-24 px-4 relative overflow-hidden text-center border-b border-white/5 bg-slate-950/40">
+                {/* Top Center Animation */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
+                    <motion.div 
+                        animate={{ 
+                            y: [0, -10, 0],
+                            rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ 
+                            duration: 4, 
+                            repeat: Infinity, 
+                            ease: "easeInOut" 
+                        }}
+                        className="relative"
+                    >
+                        <div className="absolute inset-0 bg-amber-500/20 blur-2xl rounded-full"></div>
+                        <div className="relative bg-slate-900 border border-amber-500/30 p-3 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                            <Sparkles className="w-6 h-6 text-amber-500" />
+                        </div>
+                    </motion.div>
+                </div>
+
                 <div className="container mx-auto relative z-10 max-w-5xl">
                     <motion.span 
                         initial={{ opacity: 0, scale: 0.9 }}
