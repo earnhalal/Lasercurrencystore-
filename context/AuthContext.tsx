@@ -39,21 +39,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const userDoc = await getDoc(doc(db, 'users', firebaseUser.email!));
-                if (userDoc.exists()) {
-                    setUser(userDoc.data() as User);
-                } else {
-                    setUser(null);
-                }
+        let unsubscribeUser: (() => void) | undefined;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser && firebaseUser.email) {
+                // Use onSnapshot for real-time user profile updates
+                unsubscribeUser = onSnapshot(
+                    doc(db, 'users', firebaseUser.email),
+                    (docSnap) => {
+                        if (docSnap.exists()) {
+                            setUser(docSnap.data() as User);
+                        } else {
+                            // Document might not exist yet during signup
+                            console.log("User document pending creation...");
+                        }
+                        setLoading(false);
+                    },
+                    (error) => {
+                        console.error("Firestore permission error:", error);
+                        setLoading(false);
+                    }
+                );
             } else {
                 setUser(null);
+                setLoading(false);
+                if (unsubscribeUser) unsubscribeUser();
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeUser) unsubscribeUser();
+        };
     }, []);
 
     useEffect(() => {
@@ -65,6 +82,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     ordersData.push({ id: doc.id, ...doc.data() } as unknown as Order);
                 });
                 setOrders(ordersData);
+            }, (error) => {
+                console.error("Orders sync error:", error);
             });
             return () => unsubscribe();
         }

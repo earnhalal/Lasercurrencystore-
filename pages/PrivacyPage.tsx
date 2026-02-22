@@ -31,12 +31,12 @@ export const PrivacyPage: React.FC = () => {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-10 md:p-16 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 via-amber-400 to-blue-900"></div>
+                <div className="bg-white/5 backdrop-blur-3xl rounded-[3rem] shadow-2xl border border-white/5 p-10 md:p-16 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-amber-400 to-blue-600"></div>
                     
                     <div className="text-center mb-16">
-                        <span className="text-blue-900 text-xs font-black uppercase tracking-[0.4em] mb-4 block">Legal Department</span>
-                        <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">
+                        <span className="text-blue-400 text-xs font-black uppercase tracking-[0.4em] mb-4 block">Legal Department</span>
+                        <h1 className="text-4xl font-black text-white uppercase tracking-tighter">
                             Compliance Framework
                         </h1>
                     </div>
@@ -44,9 +44,9 @@ export const PrivacyPage: React.FC = () => {
                     <div className="space-y-16">
                         {sections.map(section => (
                             <div key={section.title} className="relative pl-10">
-                                <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-900 rounded-full"></div>
-                                <h2 className="text-2xl font-black text-blue-900 mb-6 uppercase tracking-tight">{section.title}</h2>
-                                <ul className="space-y-6 text-slate-600 font-medium">
+                                <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-600 rounded-full"></div>
+                                <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">{section.title}</h2>
+                                <ul className="space-y-6 text-slate-400 font-medium">
                                     {section.points.map((point, index) => (
                                         <li key={index} className="leading-relaxed relative">
                                             <span className="absolute -left-6 text-amber-500 font-black">›</span>
@@ -59,22 +59,22 @@ export const PrivacyPage: React.FC = () => {
                     </div>
 
                     {/* FAQ Section to fill space */}
-                    <div className="mt-24 pt-16 border-t border-slate-50">
-                        <h3 className="text-xl font-black text-slate-900 mb-10 uppercase tracking-widest text-center underline decoration-amber-500 underline-offset-8">Quick Protocols (FAQ)</h3>
+                    <div className="mt-24 pt-16 border-t border-white/5">
+                        <h3 className="text-xl font-black text-white mb-10 uppercase tracking-widest text-center underline decoration-amber-500 underline-offset-8">Quick Protocols (FAQ)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                <p className="font-bold text-blue-900 text-sm mb-2 uppercase">Can I pay full on delivery?</p>
+                            <div className="bg-slate-950 p-6 rounded-2xl border border-white/5">
+                                <p className="font-bold text-blue-400 text-sm mb-2 uppercase">Can I pay full on delivery?</p>
                                 <p className="text-xs text-slate-500 font-medium leading-relaxed">No. To ensure collector commitment and logistics security, a 50% advance is mandatory for all first-time and bulk orders.</p>
                             </div>
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                <p className="font-bold text-blue-900 text-sm mb-2 uppercase">Is it legal to carry these?</p>
+                            <div className="bg-slate-950 p-6 rounded-2xl border border-white/5">
+                                <p className="font-bold text-blue-400 text-sm mb-2 uppercase">Is it legal to carry these?</p>
                                 <p className="text-xs text-slate-500 font-medium leading-relaxed">Yes, as theatrical props. However, we advise carrying them in our provided secure packaging to avoid public confusion.</p>
                             </div>
                         </div>
                     </div>
                     
                     <div className="mt-20 text-center">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
                             Last Updated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
                     </div>
