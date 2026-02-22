@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
     Shield, 
@@ -16,6 +16,9 @@ import {
 
 export const Footer: React.FC = () => {
     const currentYear = new Date().getFullYear();
+    const location = useLocation();
+
+    if (location.pathname === '/dashboard') return null;
 
     const footerSections = [
         {

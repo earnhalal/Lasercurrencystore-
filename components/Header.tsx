@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const StoreLogo = () => (
+// ... existing StoreLogo ...
   <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">
     <rect width="42" height="42" rx="10" fill="url(#logo_grad)"/>
     <path d="M10 30V12H15V25H24V30H10Z" fill="white"/>
@@ -20,8 +21,11 @@ const StoreLogo = () => (
 export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const { cart } = useCart();
+    const location = useLocation();
     const [isCelebration, setIsCelebration] = useState(false);
     const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
+
+    if (location.pathname === '/dashboard') return null;
 
     return (
         <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-[100] py-4">
