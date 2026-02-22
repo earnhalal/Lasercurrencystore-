@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Lock, ShieldCheck, ArrowRight, Upload, Clock, Fingerprint } from 'lucide-react';
+import { User, Mail, Lock, ShieldCheck, ArrowRight, Clock, Fingerprint } from 'lucide-react';
 
 const CountdownTimer: React.FC<{ onExpire: () => void }> = ({ onExpire }) => {
     const [timeLeft, setTimeLeft] = useState(300);
@@ -43,7 +43,7 @@ export const AuthPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [signupEmail, setSignupEmail] = useState('');
-    const [screenshot, setScreenshot] = useState<File | null>(null);
+    const [transactionId, setTransactionId] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -80,10 +80,14 @@ export const AuthPage: React.FC = () => {
     };
     
     const handlePaymentSubmit = async () => {
+        if (!transactionId.trim()) {
+            setError('Please enter the Transaction ID.');
+            return;
+        }
         setError('');
         setLoading(true);
         try {
-            await submitPaymentProof(signupEmail);
+            await submitPaymentProof(signupEmail, transactionId);
             navigate('/dashboard');
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "An error occurred.";
@@ -212,17 +216,24 @@ export const AuthPage: React.FC = () => {
 
                             <CountdownTimer onExpire={() => { resetSignup(); }} />
                             
-                            <label className="w-full inline-flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:border-amber-500 text-slate-400 font-black py-4 px-6 rounded-xl transition cursor-pointer text-[10px] uppercase tracking-widest">
-                                <Upload className="w-4 h-4" />
-                                {screenshot ? `Manifest: ${screenshot.name.substring(0, 15)}...` : 'Upload Remittance Proof'}
-                                <input type="file" accept="image/*" onChange={e => setScreenshot(e.target.files?.[0] || null)} className="hidden" />
-                            </label>
+                            <div className="space-y-1 text-left">
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                    Transaction ID
+                                </label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter Transaction ID" 
+                                    value={transactionId} 
+                                    onChange={e => setTransactionId(e.target.value)} 
+                                    className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white text-[11px] font-bold focus:ring-1 focus:ring-amber-500 outline-none transition-all hover:border-white/20" 
+                                />
+                            </div>
                             
                             <motion.button 
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handlePaymentSubmit} 
-                                disabled={!screenshot || loading} 
+                                disabled={!transactionId || loading} 
                                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-5 rounded-xl uppercase tracking-widest text-[10px] shadow-xl active:scale-95 disabled:bg-slate-800 disabled:text-slate-600 flex items-center justify-center gap-2"
                             >
                                 {loading ? 'Verifying...' : (

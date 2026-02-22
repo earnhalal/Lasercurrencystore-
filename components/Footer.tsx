@@ -11,8 +11,7 @@ import {
     Instagram, 
     Mail, 
     Phone, 
-    MapPin,
-    ExternalLink
+    MapPin
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {

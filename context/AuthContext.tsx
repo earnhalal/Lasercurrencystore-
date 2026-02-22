@@ -8,7 +8,6 @@ import {
 import { 
     doc, 
     setDoc, 
-    getDoc, 
     updateDoc, 
     collection, 
     query, 
@@ -25,7 +24,7 @@ interface AuthContextType {
     orders: Order[];
     signup: (name: string, email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
-    submitPaymentProof: (email: string) => Promise<void>;
+    submitPaymentProof: (email: string, transactionId: string) => Promise<void>;
     logout: () => void;
     addOrder: (order: Order) => void;
     resetSignup: () => void;
@@ -132,11 +131,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const submitPaymentProof = async (email: string): Promise<void> => {
+    const submitPaymentProof = async (email: string, transactionId: string): Promise<void> => {
         try {
             const userRef = doc(db, 'users', email);
             await updateDoc(userRef, {
-                status: 'pendingAdminVerification'
+                status: 'pendingAdminVerification',
+                transactionId: transactionId
             });
             setUser(prev => prev ? { ...prev, status: 'pendingAdminVerification' } : null);
         } catch (error: unknown) {

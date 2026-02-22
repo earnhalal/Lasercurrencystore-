@@ -45,4 +45,5 @@ export interface User {
   password?: string;
   status: UserStatus;
   balance: number;
+  transactionId?: string;
 }
