@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { PRODUCTS } from '../constants';
 import { 
     LayoutDashboard, 
     History, 
     Wallet, 
     User, 
     LogOut, 
-    ShieldCheck, 
     Clock, 
     Package, 
     MapPin, 
     Phone,
     ChevronRight,
-    Settings
+    Settings,
+    ShoppingBag,
+    Plus,
+    Trash2,
+    CheckCircle2,
+    AlertCircle
 } from 'lucide-react';
 
 const VerificationPending: React.FC = () => (
@@ -34,11 +40,17 @@ const VerificationPending: React.FC = () => (
     </div>
 );
 
-type Tab = 'overview' | 'orders' | 'balance' | 'profile';
+type Tab = 'overview' | 'shop' | 'orders' | 'balance' | 'profile';
 
 export const DashboardPage: React.FC = () => {
-    const { user, orders, logout } = useAuth();
+    const { user, orders, logout, submitDeposit, deductBalance, addOrder } = useAuth();
+    const { cart, addToCart, removeFromCart, clearCart, totalAmount } = useCart();
     const [activeTab, setActiveTab] = useState<Tab>('overview');
+    const [depositAmount, setDepositAmount] = useState('');
+    const [depositTxId, setDepositTxId] = useState('');
+    const [isDepositing, setIsDepositing] = useState(false);
+    const [depositSuccess, setDepositSuccess] = useState(false);
+    const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
     if (!user) {
         return <Navigate to="/auth" />;
@@ -47,6 +59,61 @@ export const DashboardPage: React.FC = () => {
     if (user.status !== 'verified') {
         return <VerificationPending />;
     }
+
+    const handleDeposit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!depositAmount || !depositTxId) return;
+        setIsDepositing(true);
+        try {
+            await submitDeposit(Number(depositAmount), depositTxId);
+            setDepositSuccess(true);
+            setDepositAmount('');
+            setDepositTxId('');
+            setTimeout(() => setDepositSuccess(false), 5000);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsDepositing(false);
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (totalAmount > user.balance) {
+            setCheckoutStatus('error');
+            setTimeout(() => setCheckoutStatus('idle'), 3000);
+            return;
+        }
+
+        setCheckoutStatus('loading');
+        try {
+            await deductBalance(totalAmount);
+            
+            const newOrder = {
+                id: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+                date: new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }),
+                totalAmount: totalAmount,
+                status: 'Processing',
+                items: cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price })),
+                fullName: user.name,
+                email: user.email,
+                phoneNumber: '03xx-xxxxxxx', // Placeholder, should be in user profile
+                address: 'Default Address',
+                city: 'Default City',
+                deliveryCompany: 'Leopard Courier'
+            };
+
+            await addOrder(newOrder as Order);
+            clearCart();
+            setCheckoutStatus('success');
+            setTimeout(() => {
+                setCheckoutStatus('idle');
+                setActiveTab('orders');
+            }, 2000);
+        } catch (err) {
+            console.error(err);
+            setCheckoutStatus('error');
+        }
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -62,9 +129,12 @@ export const DashboardPage: React.FC = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full transform group-hover:scale-110 transition-transform"></div>
                                 <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Mera Balance</p>
                                 <h3 className="text-4xl font-black tracking-tighter tabular-nums">Rs. {user.balance.toLocaleString()}</h3>
-                                <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white/10 w-fit px-3 py-1 rounded-full">
-                                    <ShieldCheck className="w-3 h-3" /> Verified Account
-                                </div>
+                                <button 
+                                    onClick={() => setActiveTab('balance')}
+                                    className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white/10 w-fit px-4 py-2 rounded-full hover:bg-white/20 transition-all"
+                                >
+                                    <Plus className="w-3 h-3" /> Balance Add Karain
+                                </button>
                             </div>
                             <div className="bg-slate-900 p-8 rounded-[2rem] border border-white/5 flex flex-col justify-between">
                                 <div>
@@ -75,36 +145,117 @@ export const DashboardPage: React.FC = () => {
                                     onClick={() => setActiveTab('orders')}
                                     className="mt-6 flex items-center gap-2 text-[10px] font-black text-amber-500 uppercase tracking-widest hover:gap-3 transition-all"
                                 >
-                                    View History <ChevronRight className="w-3 h-3" />
+                                    History Dekhain <ChevronRight className="w-3 h-3" />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-8">
-                            <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6">Recent Activity</h4>
-                            {orders.length > 0 ? (
-                                <div className="space-y-4">
-                                    {orders.slice(0, 3).map(order => (
-                                        <div key={order.id} className="flex items-center justify-between p-4 bg-slate-950/50 rounded-xl border border-white/5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                                                    <Package className="w-5 h-5 text-blue-400" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black text-white uppercase tracking-widest">{order.id}</p>
-                                                    <p className="text-[9px] text-slate-500 font-bold uppercase">{order.date}</p>
-                                                </div>
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div>
+                                <h4 className="text-lg font-black text-white uppercase tracking-tighter">Shopping Shuru Karain</h4>
+                                <p className="text-xs text-slate-400 font-medium mt-1">Hamare naye bundles check karain aur order dain.</p>
+                            </div>
+                            <button 
+                                onClick={() => setActiveTab('shop')}
+                                className="bg-amber-500 text-slate-950 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                            >
+                                Shop Now
+                            </button>
+                        </div>
+                    </motion.div>
+                );
+            case 'shop':
+                return (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                    >
+                        <div className="lg:col-span-2 space-y-6">
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Available Bundles</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {PRODUCTS.map(product => (
+                                    <div key={product.id} className="bg-white/5 border border-white/5 rounded-[2rem] p-6 hover:border-amber-500/20 transition-all group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center border border-white/5">
+                                                <Package className="w-5 h-5 text-amber-500" />
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-black text-white">Rs. {order.totalAmount.toLocaleString()}</p>
-                                                <p className="text-[8px] text-blue-400 font-black uppercase tracking-widest">{order.status}</p>
-                                            </div>
+                                            <span className="text-[10px] font-black text-white">Rs. {product.price.toLocaleString()}</span>
                                         </div>
-                                    ))}
+                                        <h4 className="text-sm font-black text-white uppercase mb-2">{product.name}</h4>
+                                        <p className="text-[10px] text-slate-500 mb-6 line-clamp-2">{product.description}</p>
+                                        <button 
+                                            onClick={() => addToCart(product, 1)}
+                                            className="w-full py-3 bg-white/5 hover:bg-amber-500 hover:text-slate-950 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/10"
+                                        >
+                                            Add to Cart
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <div className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 sticky top-24">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Shopping Cart</h3>
+                                    <ShoppingBag className="w-4 h-4 text-slate-500" />
                                 </div>
-                            ) : (
-                                <p className="text-center py-10 text-slate-500 text-[10px] font-black uppercase tracking-widest">Abhi tak koi order nahi hai</p>
-                            )}
+                                
+                                {cart.length > 0 ? (
+                                    <>
+                                        <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {cart.map(item => (
+                                                <div key={item.id} className="flex items-center justify-between gap-4 p-3 bg-white/5 rounded-xl border border-white/5">
+                                                    <div className="flex-grow">
+                                                        <p className="text-[10px] font-black text-white uppercase truncate max-w-[120px]">{item.name}</p>
+                                                        <p className="text-[9px] text-slate-500 font-bold">Rs. {item.price.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button 
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="p-1.5 text-slate-500 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                        <span className="text-[10px] font-black text-white w-4 text-center">{item.quantity}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="pt-6 border-t border-white/5 space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Amount</span>
+                                                <span className="text-xl font-black text-white tracking-tighter">Rs. {totalAmount.toLocaleString()}</span>
+                                            </div>
+                                            
+                                            {checkoutStatus === 'error' && (
+                                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-400 text-[9px] font-black uppercase">
+                                                    <AlertCircle className="w-3 h-3" /> Balance Kam Hai!
+                                                </div>
+                                            )}
+
+                                            <button 
+                                                onClick={handleCheckout}
+                                                disabled={checkoutStatus === 'loading'}
+                                                className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                                                    checkoutStatus === 'loading' ? 'bg-slate-800 text-slate-500' :
+                                                    checkoutStatus === 'success' ? 'bg-emerald-500 text-white' :
+                                                    'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20'
+                                                }`}
+                                            >
+                                                {checkoutStatus === 'loading' ? 'Processing...' : 
+                                                 checkoutStatus === 'success' ? <><CheckCircle2 className="w-4 h-4" /> Order Done!</> : 
+                                                 'Checkout Karain'}
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Cart Khali Hai</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 );
@@ -176,23 +327,58 @@ export const DashboardPage: React.FC = () => {
                             <div className="text-6xl font-black text-white tracking-tighter tabular-nums mb-4">
                                 Rs. {user.balance.toLocaleString()}
                             </div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Yeh balance aap aglay orders mein use kar saktay hain.</p>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Yeh balance aap shopping ke liye use kar saktay hain.</p>
                         </div>
 
                         <div className="bg-white/5 border border-white/10 p-10 rounded-[2.5rem]">
-                            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8">Payment Info</h4>
-                            <div className="space-y-6">
+                            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-8">Balance Add Karain</h4>
+                            
+                            <form onSubmit={handleDeposit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Amount (RS)</label>
+                                        <input 
+                                            type="number" 
+                                            value={depositAmount}
+                                            onChange={(e) => setDepositAmount(e.target.value)}
+                                            placeholder="Kitna balance add karna hai?"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 px-5 text-[11px] font-black text-white focus:ring-1 focus:ring-amber-500 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Transaction ID</label>
+                                        <input 
+                                            type="text" 
+                                            value={depositTxId}
+                                            onChange={(e) => setDepositTxId(e.target.value)}
+                                            placeholder="Easypaisa/JazzCash ID"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 px-5 text-[11px] font-black text-white focus:ring-1 focus:ring-amber-500 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="p-6 bg-slate-950 rounded-2xl border border-white/5">
                                     <p className="text-[8px] text-slate-600 font-black uppercase tracking-widest mb-2">Hamara Easypaisa Number</p>
                                     <p className="text-xl font-black text-white font-mono tracking-widest">03xx-xxxxxxx</p>
+                                    <p className="text-[9px] text-slate-500 font-bold mt-2 italic uppercase">Title: LASER STORE</p>
                                 </div>
-                                <div className="flex items-start gap-4 p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                                    <ShieldCheck className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed uppercase tracking-wider">
-                                        Payment karnay se pehlay hamesha "LASER STORE" title check karain.
-                                    </p>
-                                </div>
-                            </div>
+
+                                {depositSuccess && (
+                                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                                        <CheckCircle2 className="w-4 h-4" /> Deposit Request Sent! 5 mins mein balance add ho jayega.
+                                    </div>
+                                )}
+
+                                <button 
+                                    type="submit"
+                                    disabled={isDepositing}
+                                    className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                                >
+                                    {isDepositing ? 'Submitting...' : 'Deposit Request Bhejain'}
+                                </button>
+                            </form>
                         </div>
                     </motion.div>
                 );
@@ -269,6 +455,7 @@ export const DashboardPage: React.FC = () => {
                 <nav className="space-y-2 flex-grow">
                     {[
                         { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
+                        { id: 'shop', icon: ShoppingBag, label: 'Shop' },
                         { id: 'orders', icon: History, label: 'Orders' },
                         { id: 'balance', icon: Wallet, label: 'Balance' },
                         { id: 'profile', icon: User, label: 'Profile' },
@@ -337,6 +524,7 @@ export const DashboardPage: React.FC = () => {
             <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
                 {[
                     { id: 'overview', icon: LayoutDashboard },
+                    { id: 'shop', icon: ShoppingBag },
                     { id: 'orders', icon: History },
                     { id: 'balance', icon: Wallet },
                     { id: 'profile', icon: User },

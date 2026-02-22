@@ -25,6 +25,8 @@ interface AuthContextType {
     signup: (name: string, email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     submitPaymentProof: (email: string, transactionId: string) => Promise<void>;
+    submitDeposit: (amount: number, transactionId: string) => Promise<void>;
+    deductBalance: (amount: number) => Promise<void>;
     logout: () => void;
     addOrder: (order: Order) => void;
     resetSignup: () => void;
@@ -144,6 +146,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             throw new Error(message);
         }
     };
+
+    const submitDeposit = async (amount: number, transactionId: string): Promise<void> => {
+        if (!user) return;
+        try {
+            await addDoc(collection(db, 'deposits'), {
+                userEmail: user.email,
+                amount,
+                transactionId,
+                status: 'pending',
+                createdAt: serverTimestamp()
+            });
+            
+            // For demo purposes, let's auto-approve after 5 seconds
+            setTimeout(async () => {
+                const userRef = doc(db, 'users', user.email);
+                await updateDoc(userRef, {
+                    balance: (user.balance || 0) + amount
+                });
+            }, 5000);
+
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to submit deposit.";
+            throw new Error(message);
+        }
+    };
+
+    const deductBalance = async (amount: number): Promise<void> => {
+        if (!user) return;
+        try {
+            const userRef = doc(db, 'users', user.email);
+            await updateDoc(userRef, {
+                balance: user.balance - amount
+            });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to deduct balance.";
+            throw new Error(message);
+        }
+    };
     
     const resetSignup = async () => {
         logout();
@@ -170,7 +210,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     return (
-        <AuthContext.Provider value={{ user, orders, signup, login, submitPaymentProof, logout, addOrder, resetSignup }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            orders, 
+            signup, 
+            login, 
+            submitPaymentProof, 
+            submitDeposit,
+            deductBalance,
+            logout, 
+            addOrder, 
+            resetSignup 
+        }}>
             {!loading && children}
         </AuthContext.Provider>
     );
