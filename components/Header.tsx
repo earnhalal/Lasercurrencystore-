@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
+import { Search, Sun, Moon, ShoppingCart, User } from 'lucide-react';
 
 const StoreLogo = () => (
 // ... existing StoreLogo ...
@@ -21,70 +23,92 @@ const StoreLogo = () => (
 export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const { cart } = useCart();
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
-    const [isCelebration, setIsCelebration] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const cartItemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
     if (location.pathname === '/dashboard') return null;
 
     return (
-        <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-[100] py-4">
+        <header className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-b border-slate-200 dark:border-white/5 sticky top-0 z-[100] py-4 transition-colors duration-300">
             <div className="container mx-auto px-4 md:px-8">
-                <div className="flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-4 group">
+                <div className="flex items-center justify-between gap-4 lg:gap-8">
+                    {/* Logo */}
+                    <Link to="/" className="flex items-center gap-3 group shrink-0">
                         <StoreLogo />
-                        <div className="flex flex-col">
-                            <h1 className="text-xl font-black text-white tracking-tighter leading-none group-hover:text-amber-400 transition-colors uppercase">
+                        <div className="flex flex-col hidden sm:flex">
+                            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter leading-none group-hover:text-amber-500 transition-colors uppercase">
                                 LASER<span className="text-amber-500">STORE</span>
                             </h1>
-                            <span className="text-[8px] font-black text-slate-500 tracking-[0.4em] uppercase">Authorized Repository</span>
+                            <span className="text-[8px] font-black text-slate-500 tracking-[0.4em] uppercase">Premium Replicas</span>
                         </div>
                     </Link>
                     
-                    <div className="hidden lg:flex items-center gap-10">
-                        {/* Interactive Toggle */}
-                        <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-2xl border border-white/5 group">
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${!isCelebration ? 'text-amber-500' : 'text-slate-500'}`}>Standard</span>
-                            <button 
-                                onClick={() => setIsCelebration(!isCelebration)}
-                                className="w-12 h-6 bg-slate-800 rounded-full p-1 relative transition-all duration-300"
-                            >
-                                <div className={`w-4 h-4 rounded-full transition-all duration-500 transform shadow-[0_0_10px_rgba(212,175,55,0.5)] ${isCelebration ? 'translate-x-6 bg-amber-500' : 'translate-x-0 bg-blue-500'}`}></div>
+                    {/* Search Bar (Amazon Style) */}
+                    <div className="flex-grow max-w-2xl hidden md:flex">
+                        <div className="relative w-full flex items-center">
+                            <input 
+                                type="text" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search bundles, series, or categories..." 
+                                className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-l-xl py-3 px-5 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                            />
+                            <button className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-6 py-3 rounded-r-xl transition-colors flex items-center justify-center border border-amber-500">
+                                <Search className="w-4 h-4" />
                             </button>
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isCelebration ? 'text-amber-500' : 'text-slate-500'}`}>Celebration</span>
                         </div>
+                    </div>
 
-                        <nav className="flex items-center space-x-8">
-                            <Link to="/" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition">Shop</Link>
+                    <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+                        {/* Theme Toggle */}
+                        <button 
+                            onClick={toggleTheme}
+                            className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors border border-slate-200 dark:border-white/5"
+                        >
+                            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                        </button>
+
+                        <nav className="hidden lg:flex items-center space-x-6">
                             {user ? (
-                                <>
-                                    <Link to="/dashboard" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition">Dashboard</Link>
-                                    <button onClick={logout} className="text-[10px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest transition">Logout</button>
-                                </>
+                                <div className="flex items-center gap-4">
+                                    <Link to="/dashboard" className="flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-widest transition">
+                                        <User className="w-4 h-4" /> Dashboard
+                                    </Link>
+                                    <button onClick={logout} className="text-[10px] font-black text-red-500 hover:text-red-600 dark:hover:text-red-400 uppercase tracking-widest transition">Logout</button>
+                                </div>
                             ) : (
-                                <Link to="/auth" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 transition">Login</Link>
+                                <Link to="/auth" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20 transition">Login</Link>
                             )}
                         </nav>
 
-                        <Link to="/cart" className="relative group p-3 bg-white/5 rounded-xl hover:bg-white/10 border border-white/5 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-300 group-hover:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
+                        {/* Cart */}
+                        <Link to="/cart" className="relative group p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 transition flex items-center gap-2">
+                            <ShoppingCart className="h-5 w-5 text-slate-700 dark:text-slate-300 group-hover:text-amber-500" />
+                            <span className="hidden sm:inline text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Cart</span>
                             {cartItemCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[9px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-slate-950">
+                                <span className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-950 shadow-sm">
                                     {cartItemCount}
                                 </span>
                             )}
                         </Link>
                     </div>
-
-                    <div className="lg:hidden flex items-center gap-4">
-                        <Link to="/cart" className="relative p-2 bg-white/5 rounded-xl">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                            {cartItemCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[9px] rounded-full h-4 w-4 flex items-center justify-center font-bold">{cartItemCount}</span>}
-                        </Link>
+                </div>
+                
+                {/* Mobile Search Bar */}
+                <div className="mt-4 md:hidden flex">
+                    <div className="relative w-full flex items-center">
+                        <input 
+                            type="text" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search bundles..." 
+                            className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-l-xl py-3 px-4 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                        />
+                        <button className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-5 py-3 rounded-r-xl transition-colors flex items-center justify-center border border-amber-500">
+                            <Search className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
             </div>
